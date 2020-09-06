@@ -79,8 +79,10 @@ def create_input_files(
     )
 
     # Save word map to a JSON
-    # with open(os.path.join(output_folder, 'WORDMAP_' + base_filename + '.json'), 'w') as j:
-    #     json.dump(word_map, j)
+    with open(
+        os.path.join(output_folder, "WORDMAP_" + base_filename + ".json"), "w"
+    ) as j:
+        json.dump(word_map, j)
 
     # Sample captions per image, save images to HDF5 file, and captions and their lengths to JSON files
     seed(123)
