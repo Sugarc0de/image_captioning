@@ -77,7 +77,6 @@ def create_input_files(
         + str(min_word_freq)
         + "_min_word_freq"
     )
-
     # Save word map to a JSON
     with open(
         os.path.join(output_folder, "WORDMAP_" + base_filename + ".json"), "w"
@@ -132,8 +131,10 @@ def create_input_files(
                 img = resize(img, (256, 256))
                 img = img.transpose(2, 0, 1)
                 assert img.shape == (3, 256, 256)
-                assert np.max(img) <= 255
-
+                img = img * 255
+                assert np.max(img) <= 255 and np.min(img) >= 0
+                if i <= 20:
+                    print(f"max: {np.max(img)} and min: {np.min(img)}")
                 # Save image to HDF5 file
                 images[i] = img
 

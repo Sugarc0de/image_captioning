@@ -1,0 +1,4 @@
+requirements.txt
+**/*.pyc
+**/.vimrc
+**/.ipynb_checkpoints/

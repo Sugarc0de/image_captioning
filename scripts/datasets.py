@@ -1,4 +1,6 @@
 import h5py
+import math
+import torch
 import numpy as np
 import os
 import json
@@ -12,15 +14,13 @@ class CaptionsDataset(Dataset):
     def __init__(self, data_path, split, transform=None):
         assert split in ["TRAIN", "VAL", "TEST"]
 
-        CAPTIONS_PER_IMAGE = 5
+        self.CAPTIONS_PER_IMAGE = 5
         MIN_WORD_FREQ = 5
-        self._mean = [0.485, 0.456, 0.406]
-        self._std = [0.229, 0.224, 0.225]
 
         with open(
             os.path.join(
                 data_path,
-                f"{split}_CAPTIONS_flickr30k_{CAPTIONS_PER_IMAGE}_cap_per_img_{MIN_WORD_FREQ}_min_word_freq.json",
+                f"{split}_CAPTIONS_flickr30k_{self.CAPTIONS_PER_IMAGE}_cap_per_img_{MIN_WORD_FREQ}_min_word_freq.json",
             ),
             "r",
         ) as f:
@@ -29,7 +29,7 @@ class CaptionsDataset(Dataset):
         with open(
             os.path.join(
                 data_path,
-                f"{split}_CAPLENS_flickr30k_{CAPTIONS_PER_IMAGE}_cap_per_img_{MIN_WORD_FREQ}_min_word_freq.json",
+                f"{split}_CAPLENS_flickr30k_{self.CAPTIONS_PER_IMAGE}_cap_per_img_{MIN_WORD_FREQ}_min_word_freq.json",
             ),
             "r",
         ) as f:
@@ -38,11 +38,10 @@ class CaptionsDataset(Dataset):
         self.h = h5py.File(
             os.path.join(
                 data_path,
-                f"{split}_IMAGES_flickr30k_{CAPTIONS_PER_IMAGE}_cap_per_img_{MIN_WORD_FREQ}_min_word_freq.hdf5",
+                f"{split}_IMAGES_flickr30k_{self.CAPTIONS_PER_IMAGE}_cap_per_img_{MIN_WORD_FREQ}_min_word_freq.hdf5",
             ),
             "r",
         )
-        self.images = np.array(self.h["images"]).astype("uint8")
 
         self.transform = transform
 
@@ -54,12 +53,21 @@ class CaptionsDataset(Dataset):
 
         caption = self.enc_captions[idx]
         caplen = self.caplens[idx]
+        print(f"The {np.int(np.floor(idx/self.CAPTIONS_PER_IMAGE))} th image...")
+        assert self.h.attrs["captions_per_image"] == self.CAPTIONS_PER_IMAGE
+        image = np.array(
+            self.h["/home/ec2-user/SageMaker/efs/200005/images"][
+                int(idx // self.CAPTIONS_PER_IMAGE)
+            ]
+        )
 
-        image = self.images[idx, :, :, :]
         assert np.max(image) <= 255 and np.min(image) >= 0
 
-        image = image // 255.0
+        image = np.clip(image / 255.0, 0, 1)
 
-        pixels = (image - self._mean) / self._std
+        image = np.transpose(image, (1, 2, 0))
 
-        return pixels, caption, caplen
+        if self.transform:
+            image = self.transform(image)
+
+        return image, caption, caplen
