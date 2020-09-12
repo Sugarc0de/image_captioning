@@ -4,11 +4,11 @@ import torch
 import numpy as np
 import os
 import json
-from torch.utils.data import Dataset
+import torch.utils.data as data
 from torchvision import transforms, utils
 
 
-class CaptionsDataset(Dataset):
+class CaptionsDataset(data.Dataset):
     """Captions dataset"""
 
     def __init__(self, data_path, split, transform=None):
